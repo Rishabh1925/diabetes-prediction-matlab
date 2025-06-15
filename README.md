@@ -39,6 +39,15 @@ Three interactive pages:
 
 Color-coded messages and a refresh button enhance usability.
 
+### 🔹 Home Screen
+![Home Screen](./Docs/UI/UI_Home.png)
+
+### 🔹 Prediction Result
+![Prediction Result](./Docs/UI/Prediction_Result.png)
+
+### 🔹 Input Form
+![Input Form](./Docs/UI/Input_Form.png)
+
 ## 🖥 Implementation Highlights
 - Core script: `DiabetesPredictorUI.m`
 - Full input validation, auto-calculated BMI, and clear result display.
