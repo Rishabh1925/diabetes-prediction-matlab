@@ -1,0 +1,230 @@
+function DiabetesPredictorUI
+    % Loading dataset and train the model
+    disp('Loading and training model...');
+    data = readtable('diabetes.csv');
+    features = data{:, 1:end-1};
+    labels = data.Outcome;
+
+    % Normalization
+    cv = cvpartition(size(data,1), 'HoldOut', 0.3);
+    X_train = features(training(cv), :);
+    y_train = labels(training(cv));
+    X_test = features(test(cv), :);
+    y_test = labels(test(cv));
+
+    mu = mean(X_train);
+    sigma = std(X_train);
+    X_train = (X_train - mu) ./ sigma;
+    X_test = (X_test - mu) ./ sigma;
+
+    % Training the model
+    model = fitcensemble(X_train, y_train, 'Method', 'Bag', 'NumLearningCycles', 100);
+
+    % Averages
+    avg_skin = mean(data.SkinThickness, 'omitnan');
+    avg_dpf = mean(data{:,7}, 'omitnan');
+    avg_insulin = mean(data.Insulin, 'omitnan');
+    avg_pregnancies = mean(data.Pregnancies, 'omitnan');
+
+    % GUI
+    f = figure('Name','Diabetes Predictor','Position',[600 200 450 600],'Resize','off');
+
+    % Panels
+    panel1 = uipanel(f, 'Position', [0 0 1 1]);
+    panel2 = uipanel(f, 'Position', [0 0 1 1], 'Visible', 'off');
+    panel3 = uipanel(f, 'Position', [0 0 1 1], 'Visible', 'off');
+
+    inputHandles = gobjects(5,1);
+    resultText = [];
+    bmiText = [];
+    showPage3 = true;
+
+    % PAGE 1
+    uicontrol(panel1, 'Style','text','String','Enter Patient Details','FontSize',13,...
+              'Position',[100 530 250 30],'FontWeight','bold');
+    uicontrol(panel1, 'Style','text','String','Name:',...
+              'Position',[50 460 100 25],'HorizontalAlignment','left');
+    nameInput = uicontrol(panel1, 'Style','edit','Position',[180 460 200 25]);
+    uicontrol(panel1, 'Style','text','String','Age:',...
+              'Position',[50 410 100 25],'HorizontalAlignment','left');
+    ageInput = uicontrol(panel1, 'Style','edit','Position',[180 410 200 25]);
+    uicontrol(panel1, 'Style','text','String','Gender:',...
+              'Position',[50 360 100 25],'HorizontalAlignment','left');
+    genderDropdown = uicontrol(panel1, 'Style','popupmenu','String',...
+                               {'Select','Male','Female'},...
+                               'Position',[180 360 200 25]);
+    uicontrol(panel1, 'Style','pushbutton','String','Next','FontWeight','bold',...
+              'Position',[160 290 130 40],'Callback',@goToPage2);
+
+    % PAGE 2
+    labels = {'Glucose (mg/dL):', ...
+              'Blood Pressure (mmHg) (Diastolic):', ...
+              'Insulin (µU/mL) (optional):', ...
+              'Weight (kg):', ...
+              'Height (cm):'};
+    for i = 1:5
+        y = 500 - (i-1)*50;
+        uicontrol(panel2, 'Style','text','String',labels{i},...
+                  'Position',[40 y 240 25],'HorizontalAlignment','left');
+        inputHandles(i) = uicontrol(panel2, 'Style','edit','Position',[250 y 120 25]);
+    end
+    pregnancyLabel = uicontrol(panel2, 'Style','text','String','Pregnancies:',...
+                               'Position',[40 250 200 25],... 
+                                'HorizontalAlignment','left','Visible','off');
+    pregnancyInput = uicontrol(panel2, 'Style','edit','Position',[250 250 120 25],...
+                               'Visible','off');
+
+    bmiText = uicontrol(panel2, 'Style','text','String','BMI: ','FontWeight','bold',...
+                        'Position',[40 180 350 25],'HorizontalAlignment','left');
+
+    resultText = uicontrol(panel2, 'Style','text','String','',...
+                           'Position',[50 80 350 40],...
+                           'FontSize',12,'FontWeight','bold','HorizontalAlignment','center');
+    uicontrol(panel2, 'Style','pushbutton','String','Predict Diabetes',...
+              'Position',[160 130 130 40],'FontWeight','bold','Callback',@predictCallback);
+
+    uicontrol(panel2, 'Style','pushbutton','String','Refresh','Position',[160 30 130 30],...
+              'Callback',@(src,~) restartApp());
+
+    % PAGE 3
+    uicontrol(panel3, 'Style','text','String','Any Family History of Diabetes?',...
+              'Position',[60 460 350 30],...
+              'FontSize',12,'FontWeight','bold','HorizontalAlignment','center');
+
+    familyDropdown = uicontrol(panel3, 'Style','popupmenu','String',{'Select','Yes','No'},...
+                               'Position',[140 400 160 30]);
+
+    responseText = uicontrol(panel3, 'Style','text','String','',...
+                             'Position',[40 260 370 60],...
+                             'FontSize',11,'HorizontalAlignment','center');
+
+    uicontrol(panel3, 'Style','pushbutton','String','Enter',...
+              'Position',[160 200 130 35],'FontWeight','bold','Callback',@handleFamilyHistory);
+
+    uicontrol(panel3, 'Style','pushbutton','String','Start Over',...
+              'Position',[160 30 130 30],'Callback',@(src,~) restartApp());
+
+    % PAGE TRANSITION
+    function goToPage2(~,~)
+        ageVal = str2double(get(ageInput, 'String'));
+        if isnan(ageVal) || ageVal <= 0 || genderDropdown.Value == 1
+            errordlg('Please enter valid age and select gender.');
+            return;
+        end
+
+        if strcmp(genderDropdown.String{genderDropdown.Value}, 'Female')
+            set(pregnancyLabel, 'Visible', 'on');
+            set(pregnancyInput, 'Visible', 'on');
+        else
+            set(pregnancyLabel, 'Visible', 'off');
+            set(pregnancyInput, 'Visible', 'off');
+        end
+
+        set(panel1, 'Visible', 'off');
+        set(panel2, 'Visible', 'on');
+    end
+
+    % Restart
+    function restartApp()
+    set(familyDropdown, 'Value', 1);         
+    set(responseText, 'String', '');         
+    close(f);
+    DiabetesPredictorUI();                   
+    end
+
+    % Predict Diabetes Button
+    function predictCallback(~,~)
+        showPage3 = true;
+        userInput = zeros(1,6);
+
+        for j = 1:5
+            val = str2double(get(inputHandles(j), 'String'));
+            if j == 3 && isnan(val)
+                val = avg_insulin;
+            elseif isnan(val) || val < 0
+                set(resultText, 'String', 'Please enter all valid inputs.',...
+                    'ForegroundColor', [1 0 0]);
+                return;
+            end
+            userInput(j) = val;
+        end
+
+        % BMI
+        weight = userInput(4);
+        height_cm = userInput(5);
+        height_m = height_cm / 100;
+        bmi = weight / (height_m^2);
+        userInput(6) = bmi;
+        set(bmiText, 'String', sprintf('Calculated BMI: %.2f', bmi));
+
+        % High glucose
+        if userInput(1) > 200
+            set(resultText, 'String', 'High glucose levels detected! Likely diabetic.',...
+                'ForegroundColor', [1 0 0]);
+            showPage3 = false;
+            drawnow;
+            pause(2);
+            return;
+        end
+
+        % Pregnancies
+        gender = genderDropdown.String{genderDropdown.Value};
+        if strcmp(gender, 'Female')
+            preg = str2double(get(pregnancyInput, 'String'));
+            if isnan(preg) || preg < 0
+                set(resultText, 'String', 'Enter valid number of pregnancies.',... 
+                    'ForegroundColor',[1 0 0]);
+                return;
+            end
+        else
+            preg = avg_pregnancies;
+        end
+
+        ageVal = str2double(get(ageInput, 'String'));
+        if isnan(ageVal) || ageVal <= 0
+            set(resultText, 'String', 'Please enter valid age.', 'ForegroundColor', [1 0 0]);
+            return;
+        end
+
+        finalInput = [preg, userInput(1:2), avg_skin, userInput(3), userInput(6), avg_dpf,... 
+                      ageVal];
+        inputNorm = (finalInput - mu) ./ sigma;
+        pred = predict(model, inputNorm);
+
+        if pred == 1
+            set(resultText, 'String', 'The patient is likely diabetic.',...
+                'ForegroundColor',[1 0 0]);
+            showPage3 = false;
+        else
+            set(resultText, 'String', 'The patient is likely not diabetic.',...
+                'ForegroundColor',[0 0.5 0]);
+        end
+
+        drawnow;
+        pause(2);
+
+        if showPage3
+            set(panel2, 'Visible', 'off');
+            set(panel3, 'Visible', 'on');
+        end
+    end
+
+    % Handle Family History
+    function handleFamilyHistory(~,~)
+        sel = familyDropdown.Value;
+        if sel == 1
+            set(responseText, 'String', 'Please select Yes or No.', 'ForegroundColor', [1 0 0]);
+            return;
+        elseif sel == 2
+            set(responseText, 'String', ...
+                'You are not diabetic yet, but a family history indicates potential risk.' ...
+                'Please stay cautious.', ...
+                'ForegroundColor', [1 0 0]);
+        else
+            set(responseText, 'String', ...
+                'Great! You are not diabetic, and with no family history,' ...
+                'you are at low risk.', ...
+                'ForegroundColor', [0 0.5 0]);
+        end
+    end
+end
