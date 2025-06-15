@@ -1,0 +1,29 @@
+# MATLAB autosave and backup files
+*.asv
+*.autosave
+
+# MATLAB data files (optional if not needed)
+*.mat
+*.fig
+
+# Simulink and code generation
+slprj/
+sccprj/
+codegen/
+_work/
+
+# MATLAB project files
+*.mlproj
+*.prj
+
+# Temporary or OS-generated files
+*.log
+*.tmp
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
+
+# Optional: ignore runtime-generated plots or files
+*.png
+*.pdf
