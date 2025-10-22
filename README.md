@@ -73,7 +73,3 @@ For questions or collaboration:
 
 Email: rishabhrsingh19@gmail.com  
 Linkedin: https://www.linkedin.com/rishabh-ranjan-singh
-
----
-
-> *This project demonstrates how simple ML workflows in MATLAB can be turned into life-saving tools — fast, accessible, and effective.*
