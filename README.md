@@ -1,6 +1,6 @@
 # Diabetes Prediction Using Data Science & Machine Learning (MATLAB)
 
-This MATLAB-based project implements a diabetes prediction system using machine learning and an intuitive graphical user interface (GUI). Designed as part of a college assignment, it empowers users to quickly assess diabetes risk based on simple health metrics.
+This MATLAB-based Project implements a diabetes prediction system using machine learning and an intuitive graphical user interface (GUI). Designed as part of a college assignment, it empowers users to quickly assess diabetes risk based on simple health metrics.
 
 ## Objective
 To build an accessible, early-stage diabetes risk predictor using the **Pima Indian Diabetes Dataset**, making health screening more scalable and user-friendly — especially for remote or underserved areas.
