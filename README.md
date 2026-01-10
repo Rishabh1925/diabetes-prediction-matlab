@@ -72,4 +72,3 @@ Color-coded messages and a refresh button enhance usability.
 For questions or collaboration: 
 
 Email: rishabhrsingh19@gmail.com  
-Linkedin: https://www.linkedin.com/rishabh-ranjan-singh
